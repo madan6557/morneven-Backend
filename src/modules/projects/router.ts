@@ -53,6 +53,18 @@ const projectSchema = z.object({
 
 const projectUpdateSchema = projectSchema.partial();
 
+const normalizeProjectDocs = (docs: Array<z.infer<typeof docSchema>>) =>
+  docs.map((doc) => {
+    const isImage = doc.type === 'image';
+    const url = doc.url || (isImage ? doc.thumbnail : '') || '';
+    const thumbnail = doc.thumbnail || (isImage ? doc.url : '') || '';
+    return {
+      ...doc,
+      url,
+      thumbnail
+    };
+  });
+
 const buildProjectData = (
   body: z.infer<typeof projectSchema> | z.infer<typeof projectUpdateSchema>,
   existingMeta?: Prisma.JsonValue | null
@@ -63,7 +75,7 @@ const buildProjectData = (
   if (rest.thumbnail !== undefined) data.thumbnail = rest.thumbnail;
   if (rest.shortDesc !== undefined) data.shortDesc = rest.shortDesc;
   if (rest.fullDesc !== undefined) data.fullDesc = rest.fullDesc;
-  if (rest.docs !== undefined) data.docs = rest.docs as Prisma.InputJsonArray;
+  if (rest.docs !== undefined) data.docs = normalizeProjectDocs(rest.docs) as Prisma.InputJsonArray;
   if (rest.archived !== undefined) data.archived = rest.archived;
   if (rest.contributor !== undefined) data.contributor = rest.contributor;
   if (rest.meta !== undefined || rest.features !== undefined || rest.headerImage !== undefined) {

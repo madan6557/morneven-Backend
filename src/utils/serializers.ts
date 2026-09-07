@@ -64,13 +64,20 @@ const docDateValue = (value?: string | null) => {
 const sortDocsByDateDesc = <T extends { date?: string | null }>(docs: T[]) =>
   [...docs].sort((a, b) => docDateValue(b.date) - docDateValue(a.date));
 
-const serializeProjectDoc = (doc: ProjectDocJson) => ({
-  type: doc.type === 'video' ? 'video' : doc.type === 'file' ? 'file' : 'image',
-  url: doc.url ?? '',
-  thumbnail: doc.thumbnail ?? '',
-  caption: doc.caption ?? '',
-  ...(doc.date ? { date: doc.date } : {})
-});
+const serializeProjectDoc = (doc: ProjectDocJson) => {
+  const type = doc.type === 'video' ? 'video' : doc.type === 'file' ? 'file' : 'image';
+  const rawUrl = doc.url?.trim() ?? '';
+  const rawThumb = doc.thumbnail?.trim() ?? '';
+  const url = rawUrl || (type === 'image' ? rawThumb : '') || '';
+  const thumbnail = rawThumb || (type === 'image' ? rawUrl : '') || '';
+  return {
+    type,
+    url,
+    thumbnail,
+    caption: doc.caption ?? '',
+    ...(doc.date ? { date: doc.date } : {})
+  };
+};
 
 export const serializeProject = (project: ProjectWithPatches) => {
   const meta = jsonObject(project.meta);
@@ -179,13 +186,20 @@ type EntityDocRecord = Prisma.EntityDocGetPayload<object>;
 type LoreRecord = Prisma.LoreItemGetPayload<object>;
 type DiscussionRecord = Prisma.CommentGetPayload<{ include: { author: true; replies: { include: { author: true } } } }>;
 
-export const serializeDoc = (doc: EntityDocRecord) => ({
-  type: doc.type === MediaType.video ? 'video' : doc.type === MediaType.file ? 'file' : 'image',
-  url: doc.url,
-  thumbnail: doc.thumbnail ?? '',
-  caption: doc.caption ?? '',
-  ...(doc.date ? { date: doc.date } : {})
-});
+export const serializeDoc = (doc: EntityDocRecord) => {
+  const type = doc.type === MediaType.video ? 'video' : doc.type === MediaType.file ? 'file' : 'image';
+  const rawUrl = doc.url?.trim() ?? '';
+  const rawThumb = doc.thumbnail?.trim() ?? '';
+  const url = rawUrl || (type === 'image' ? rawThumb : '') || '';
+  const thumbnail = rawThumb || (type === 'image' ? rawUrl : '') || '';
+  return {
+    type,
+    url,
+    thumbnail,
+    caption: doc.caption ?? '',
+    ...(doc.date ? { date: doc.date } : {})
+  };
+};
 
 const extractTextMentions = (text: string) =>
   Array.from(text.matchAll(/@([\w.-]+)/g)).map((match) => ({
